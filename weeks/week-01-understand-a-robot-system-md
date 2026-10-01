@@ -1,0 +1,220 @@
+
+# Week 1: Understand a robotic system
+
+Unlike web development or software engineering, robotics is not a course a lot of people around me are already taking. Free detailed material exists, but I had to hunt for it. I started with SuperGrok. It did not help me much.
+
+What helped: Princeton lectures, Concept Classes, then two short videos on automation vs robotics and on hardware/software.
+
+## What is a robot?
+
+A robot is a programmable machine that can sense its environment, decide what to do, and act on the physical world with some degree of autonomy.
+
+Treat a robot as four coupled systems:
+
+1. Mechanical structure
+2. Power
+3. Electronics and control
+4. Software
+
+They only work as a robot when they are coupled.
+
+## The robotic system, in four words
+
+- **Input** — the world becomes a signal (sensor, button, camera)
+- **Processing** — the controller / software decides
+- **Output** — the decision becomes motion or force (actuator)
+- **Feedback** — the result is measured and sent back into processing
+
+```text
+input → processing → output
+              ↑          |
+              └── feedback
+```
+
+No feedback: open loop.  
+Feedback present: closed loop.
+
+## Gears
+
+Gears are toothed wheels that interlock and transfer circular motion from one shaft to another. Watches, cars, robots.
+
+**What they do:**
+
+- transmit motion
+- increase or decrease speed
+- increase or decrease torque (force)
+
+A small gear turning a big gear: slower motion, more force. That is useful for lifting or gripping.
+
+**Types I wrote down:** spur, bevel, helical.
+
+## Sensors
+
+Sensors convert a physical input into an electrical signal. Eyes, ears, skin of the robot.
+
+They matter for navigation, obstacle detection, grip, safety, and precise motion. Without them the robot is blind.
+
+## Actuators
+
+Actuators convert an electrical signal into mechanical motion. Muscles of the robot.
+
+**Two types:**
+
+- **Linear** — motion in a straight line (push, pull, slide)
+- **Rotary** — motion around an axis (spin a wheel, swing a joint)
+
+Applications follow the same split: use a linear actuator to slide or lift in a line; use a rotary actuator to turn.
+
+## Summary I wrote in my notebook
+
+Gears transmit and modify motion.  
+Actuators create movement.  
+Together they make the robot function like a living system.
+
+## Power supply
+
+On a robot, the power supply is the source of electrical energy for that machine. Usually a battery, sometimes a wall adapter, often with a regulator so logic chips get a steady voltage and motors get enough current.
+
+That is not the same thing as the national grid, and it is not only the metal box inside a desktop PC. The robot question is: what feeds this machine, and can it feed both the brain and the muscles?
+
+Motors can pull sudden current. If the brain and the motors share a weak supply, the controller can reset when the wheel starts. That is why power is its own block.
+
+## Automation vs robotics
+
+**Automation:** the machine follows a planned script. It does not have to notice the world.  
+Example: a washing machine.
+
+**Robotics:** the machine does work a human used to do, and it notices the world and can change what it does.  
+Example: a vacuum cleaner that drives around a room.
+
+The line is not holy. A robot vacuum is both. I am using the difference as a thinking tool: script vs sense-and-change.
+
+Video I watched: [automation vs robotics](https://youtu.be/hf3JxKkEuhw)
+
+## Open-loop vs closed-loop systems
+
+### Open loop
+
+An open-loop control system does not measure the output or feed it back to the controller. The controller acts only on the input command. It does not check whether the desired output happened.
+
+Examples:
+
+- toaster on a timer
+- “drive forward for 2 seconds”
+- “spin the motor at this voltage and hope the speed is right”
+
+Open loop is simple, cheap, and fast. It fails when the world changes: slope, extra weight, low battery, friction, a wall.
+
+### Closed loop
+
+A closed-loop system measures the output and sends that measurement back. The controller compares what I wanted with what actually happened. The difference is the error. It uses the error to correct the next command.
+
+```text
+desired  →  controller  →  actuator  →  world
+                ↑                         |
+                └──── sensor / feedback ──┘
+```
+
+Examples:
+
+- obstacle-avoiding robot: read distance, if too close then turn, read again
+- motor with an encoder: I asked for 100 rpm, I got 70, raise the command
+
+Closed loop can reject disturbances. It needs a sensor and a bit more software.
+
+### Same robot, both styles
+
+Open loop: both wheels “forward” for one second.  
+Closed loop: both wheels forward while distance stays large; stop and turn when it is not.
+
+## How software interacts with physical hardware
+
+Video I watched: [How Hardware and Software Talk to Each Other](https://youtu.be/gJKwSJKvkyg)
+
+**Hardware** is the physical equipment: processor, memory, keyboard, screen, sensor, motor, wire.
+
+**Software** is the instructions and data that tell that equipment what to do: operating system, app, firmware, your robot program.
+
+They do not touch. They meet as electrical signals.
+
+**Output path (software → world)**
+
+1. Your code decides: `turn left`.
+2. The microcontroller changes pins. Often this is PWM.
+3. A motor driver turns that logic signal into current the motor can use.
+4. The actuator moves. Gears may change speed and torque.
+5. The wheel moves in the real world.
+
+**Input path (world → software)**
+
+1. Something physical happens: distance, light, force, a switch.
+2. The sensor turns that into an electrical signal.
+3. The microcontroller reads it.
+4. That becomes a number in your program.
+5. The program decides the next output.
+
+```text
+world → sensor → electrical signal → number in software
+software decision → pin/PWM → driver → actuator → world
+```
+
+Hardware gives software’s instructions a physical effect.
+
+## Obstacle-avoiding robot
+
+| Block | On this robot |
+|---|---|
+| Input | ultrasonic distance |
+| Processing | microcontroller program |
+| Output | two motors / wheels |
+| Feedback | new distance reading after each move |
+| Power | battery |
+| Mechanical | chassis, wheels |
+
+Loop: measure → if far, drive → if close, turn → measure again.
+
+### Labeled diagram
+
+```mermaid
+flowchart TB
+  subgraph robot["Simple obstacle-avoiding robot"]
+    P["POWER SUPPLY\nbattery"]
+    S["SENSOR / INPUT\nultrasonic distance"]
+    C["CONTROLLER / PROCESSING\nmicrocontroller + software"]
+    A["ACTUATORS / OUTPUT\nleft motor + right motor"]
+    P --> S
+    P --> C
+    P --> A
+    S -->|"distance reading"| C
+    C -->|"drive / stop / turn"| A
+  end
+  W["WORLD\nfloor, walls, obstacles"]
+  W -->|"physical distance"| S
+  A -->|"wheels move"| W
+  W -.->|"FEEDBACK: new distance after moving"| S
+```
+
+## Sources
+
+- [Princeton Introduction to Robotics, Lecture 1](https://youtu.be/e4jow5O3JT8)
+- [Princeton lecture I used for gears](https://youtu.be/eqXQ80vlgqE)
+- [Concept Classes — sensors, actuators, controllers](https://youtu.be/sSai34kymfk)
+- [Automation vs robotics](https://youtu.be/hf3JxKkEuhw)
+- [How hardware and software talk to each other](https://youtu.be/gJKwSJKvkyg)
+
+## End of week
+
+### What did I learn?
+Robot = sense, decide, act, some autonomy. Four coupled systems. Input, processing, output, feedback. Gears modify motion. Actuators are linear or rotary. Automation is a script. Robotics notices the world. Open loop does not check. Closed loop does. Software moves hardware only through signals.
+
+### What did I build or solve?
+This page. Definitions, diagrams, and the obstacle-avoiding robot as a structure. No ROS. No new equipment.
+
+### What confused me?
+Finding a path that was free and detailed. SuperGrok was not enough. Power supply was easy to mix up with electricity in general. Open loop sounded like a broken system until I learned it is just a system that does not look.
+
+### How does this apply to a robot?
+Every robot I will build is this loop with more parts. Obstacle avoidance is already a closed loop: the world is allowed to change the next command.
+```
+
+That whole block is one paste. After you save it on GitHub, the diagram should appear under **Labeled diagram**, not at the top.
